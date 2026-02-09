@@ -1,0 +1,54 @@
+[project]
+name = "Weeknum"
+version = "1.0.0"
+description = "Instant information of current week number and easy change of dates"
+readme = "README.md"
+requires-python = ">=3.14"
+authors = [
+    { name = "Twilight0", email = "twilight0@vivaldi.net" }
+]
+dependencies = [
+  "flet==0.80.5",
+  "flet-ads==0.80.5"
+]
+
+[tool.flet]
+# org name in reverse domain name notation, e.g. "com.mycompany".
+# Combined with project.name to build bundle ID for iOS and Android apps
+org = "org"
+requires = ["flet-ads"]
+
+[tool.flet.packaging]
+include_modules = ["flet-ads"]
+
+# project display name that is used as an app title on Android and iOS home screens,
+# shown in window titles and about app dialogs on desktop.
+product = "Weeknum"
+
+# company name to display in about app dialogs
+company = "Home"
+
+# copyright text to display in about app dialogs
+copyright = "Copyright (C) 2026 by Twilight"
+
+[tool.flet.app]
+path = "src"
+
+[tool.uv]
+dev-dependencies = [
+    "flet[all]==0.80.5"
+#    "flet-ads==0.80.5"
+]
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.group.dev.dependencies]
+flet = {extras = ["all"], version = "0.80.5"}
+
+[tool.flet.android]
+min_sdk_version = 25
+target_sdk_version = 35
+
+# [tool.flet.android.meta_data]
+# "com.google.android.gms.ads.APPLICATION_ID" = "ca-app-pub-6266131605018049~5223299560"
