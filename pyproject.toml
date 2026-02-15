@@ -1,6 +1,6 @@
 [project]
 name = "Weeknum"
-version = "1.0.0"
+version = "1.1.0"
 description = "Instant information of current week number and easy change of dates"
 readme = "README.md"
 requires-python = ">=3.14"
