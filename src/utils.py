@@ -1,6 +1,5 @@
 import datetime
-import sys
-import os
+import wikipediaapi
 
 # Helper to get week and year from a date
 def get_week_and_year(date):
@@ -20,3 +19,12 @@ def get_date_range(year, week, week_start='monday'):
     end = start + datetime.timedelta(days=6)
 
     return start, end
+
+
+def get_todays_wiki():
+
+    wiki_init = wikipediaapi.Wikipedia(user_agent='Weeknum/1.2.0 (twilight0@vivaldi.net), a cross-platform app built using open source tools', language='en')
+
+    page_py = wiki_init.page('Wikipedia:On_this_day/Today')
+
+    return page_py.text.replace(' [talk ·  edit ·  history]', '')

@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-02-26
+
+### Added:
+- **Main screen:** Wikipedia article for selected anniversaries and events
+- **Main screen:** Scrolling
+
+### Moved:
+- **The query of "What day is it?"** to main screen
+
+### Fixed:
+- **Minor bug fixes**
+
+### Removed:
+- **Splash image on main screen**
+
 ## [1.1.0] - 2026-02-15
 
 ### Added:

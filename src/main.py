@@ -1,11 +1,13 @@
 import flet as ft
 import datetime
+import asyncio
 
-from utils import get_week_and_year, get_date_range
+from utils import get_week_and_year, get_date_range, get_todays_wiki
 
 async def main(page: ft.Page):
 
     page.title = "Weeknum"
+    page.scroll = ft.ScrollMode.AUTO
 
     locale_format = await ft.SharedPreferences().contains_key("format")
     if locale_format:
@@ -39,7 +41,11 @@ async def main(page: ft.Page):
     today = datetime.date.today()
 
     current_week, current_year = get_week_and_year(today)
-    week_start = await ft.SharedPreferences().get("week_start") or "monday"
+    week_start = await ft.SharedPreferences().contains_key("week_start")
+    if week_start:
+        week_start = await ft.SharedPreferences().get("week_start")
+    else:
+        week_start = 'monday'
     start_date, end_date = get_date_range(current_year, current_week, week_start)
 
     week_display = ft.Text(
@@ -60,9 +66,10 @@ async def main(page: ft.Page):
         dialog.open = False
         page.update()
 
-    async def close_dialog_and_drawer(dialog):
+    async def close_dialog_and_drawer(dialog, close_drawer=False):
         dialog.open = False
-        await page.close_drawer()
+        if close_drawer:
+            await page.close_drawer()
         page.update()
 
     def update_formats(rdf, af):
@@ -215,7 +222,7 @@ async def main(page: ft.Page):
             locale_format = f
 
             await ft.SharedPreferences().set("format", f)
-            await close_dialog_and_drawer(dialog)
+            await close_dialog_and_drawer(dialog, close_drawer=True)
             update_formats(*apply_formats())
             page.update()
 
@@ -312,6 +319,9 @@ async def main(page: ft.Page):
         await ft.UrlLauncher().launch_url("https://github.com/Twilight0/weeknum/")
         await page.close_drawer()
 
+    async def handle_link_tap(e: ft.Event[ft.Markdown]):
+        await page.launch_url(e.data)
+
     page.drawer = ft.NavigationDrawer(
         controls=[
             ft.ListTile(title=ft.Text("Toggle Theme"), on_click=toggle_theme),
@@ -338,7 +348,19 @@ async def main(page: ft.Page):
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
     )
 
-    bottom_display = ft.Button(content=date_display, expand=True, on_click=enter_date_dialog, height=60)
+    middle_display = ft.Button(
+        content=date_display, expand=True, on_click=enter_date_dialog, height=60
+    )
+
+    bottom_display = ft.Button(
+        icon=ft.Icons.CALENDAR_MONTH,
+        content=ft.Text(
+            'What day is it?', size=24, italic=True
+        ),
+        expand=True,
+        on_click=show_the_day,
+        height=60
+    )
 
     page.appbar = ft.AppBar(
         leading=ft.IconButton(ft.Icons.MENU, on_click=page.show_drawer),
@@ -346,11 +368,50 @@ async def main(page: ft.Page):
         center_title=True
     )
 
-    image_display = ft.Image(
-        src="splash.jpg",
-        fit=ft.BoxFit.CONTAIN,
+    # Create a placeholder for the wiki content
+    wiki_display = ft.Column(
+        [
+            ft.ProgressBar(),
+            ft.Text("Fetching today's history...", italic=True)
+        ],
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER
     )
 
-    page.add(ft.Column([main_row, bottom_display, image_display], horizontal_alignment=ft.CrossAxisAlignment.STRETCH))
+    page.add(ft.Column([main_row, middle_display, bottom_display, wiki_display], horizontal_alignment=ft.CrossAxisAlignment.STRETCH))
+    page.update()
+
+    # Fetch the wiki data
+    wiki = await asyncio.to_thread(get_todays_wiki)
+
+    # Process the wiki text for better formatting using Markdown
+    lines = wiki.strip().split('\n')
+    markdown_text = ""
+    for count, line in list(enumerate(lines, start=1)):
+        if count == 1:
+            markdown_text += f"# {line}\n"
+        elif count == 2:
+            markdown_text += line.replace(line, '---\n')
+        elif ' – ' in line:
+            # Split at the first occurrence of the en-dash
+            parts = line.split(' – ', 1)
+            year = parts[0]
+            description = parts[1]
+            # Format as a bullet point with the year bolded
+            markdown_text += f"* **{year}** – {description}\n"
+
+    markdown_text += '[Read more...](https://en.wikipedia.org/wiki/Wikipedia:On_this_day/Today)'
+
+    wiki_display.controls = [ft.Container(content=ft.Markdown(
+        markdown_text,
+        selectable=True,
+        extension_set=ft.MarkdownExtensionSet.COMMON_MARK,
+        on_tap_link=handle_link_tap,
+    ), padding=10)]
+    page.update()
+    #
+    # page.window.width = 720
+    # page.window.height = 1280
+    # page.update()
+    # await page.window.center()
 
 ft.run(main)
